@@ -1116,6 +1116,347 @@ movi-player#video_player {
     padding: 2.5rem max(0.6rem, env(safe-area-inset-right)) max(0.5rem, env(safe-area-inset-bottom)) max(0.6rem, env(safe-area-inset-left));
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   KINEFLEX ERROR & API KEY MODAL DIALOG
+   ═══════════════════════════════════════════════════════════════ */
+.kine-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 10005;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  box-sizing: border-box;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.kine-modal-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.kine-modal-card {
+  background: linear-gradient(160deg, #1c1c22 0%, #121216 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(255, 106, 0, 0.15);
+  overflow: hidden;
+  transform: scale(0.92) translateY(10px);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  font-family: "Montserrat", sans-serif;
+  color: #fff;
+}
+
+.kine-modal-backdrop.show .kine-modal-card {
+  transform: scale(1) translateY(0);
+}
+
+.kine-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.kine-modal-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255, 106, 0, 0.15);
+  border: 1px solid rgba(255, 106, 0, 0.35);
+  color: #ff6a00;
+  font-size: 1.4rem;
+  transition: all 0.2s ease;
+}
+
+.kine-modal-icon-wrap.error {
+  background: rgba(235, 94, 85, 0.15);
+  border-color: rgba(235, 94, 85, 0.35);
+  color: #eb5e55;
+}
+
+.kine-modal-icon-wrap.busy {
+  background: rgba(240, 165, 0, 0.15);
+  border-color: rgba(240, 165, 0, 0.35);
+  color: #f0a500;
+}
+
+.kine-modal-icon-wrap.rate {
+  background: rgba(56, 161, 243, 0.15);
+  border-color: rgba(56, 161, 243, 0.35);
+  color: #38a1f3;
+}
+
+.kine-modal-title-box {
+  flex: 1;
+  min-width: 0;
+}
+
+.kine-modal-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ff6a00;
+  margin-bottom: 0.2rem;
+}
+
+.kine-modal-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.kine-modal-close {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid transparent;
+  color: #aaa;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.kine-modal-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.kine-modal-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.kine-modal-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #ccc;
+}
+
+/* Stats (required vs remaining points) */
+.kine-modal-stats {
+  display: flex;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+.kine-stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.kine-stat-label {
+  font-size: 0.72rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kine-stat-val {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ff6a00;
+}
+
+/* Information banner: 100 free points, api.kineflex.site, @lakshya9pro */
+.kine-info-banner {
+  background: rgba(255, 106, 0, 0.06);
+  border: 1px solid rgba(255, 106, 0, 0.2);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.kine-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #ddd;
+}
+
+.kine-info-row strong {
+  color: #ff6a00;
+}
+
+.kine-info-row a {
+  color: #ff8533;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+
+.kine-info-row a:hover {
+  color: #ffa366;
+}
+
+.kine-info-ico {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+.kine-info-ico.orange { color: #ff6a00; }
+.kine-info-ico.blue { color: #38a1f3; }
+.kine-info-ico.cyan { color: #00e5ff; }
+
+/* Key Input Section */
+.kine-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.kine-input-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #bbb;
+}
+
+.kine-input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.kine-key-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.84rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.kine-key-input:focus {
+  border-color: #ff6a00;
+  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.25);
+}
+
+.kine-apply-btn {
+  background: #ff6a00;
+  border: none;
+  border-radius: 8px;
+  padding: 0 1rem;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.kine-apply-btn:hover {
+  background: #e05c00;
+}
+
+.kine-apply-btn:active {
+  transform: scale(0.98);
+}
+
+/* Modal Footer Buttons */
+.kine-modal-footer {
+  padding: 1rem 1.5rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.015);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.kine-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.kine-btn-primary {
+  background: rgba(255, 106, 0, 0.18);
+  border-color: rgba(255, 106, 0, 0.4);
+  color: #ff8533;
+}
+.kine-btn-primary:hover {
+  background: #ff6a00;
+  color: #fff;
+  border-color: #ff6a00;
+}
+
+.kine-btn-telegram {
+  background: rgba(0, 136, 204, 0.18);
+  border-color: rgba(0, 136, 204, 0.4);
+  color: #29b6f6;
+}
+.kine-btn-telegram:hover {
+  background: #0088cc;
+  color: #fff;
+  border-color: #0088cc;
+}
+
+.kine-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #bbb;
+}
+.kine-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
 </style>
 </head>
 <body>
@@ -1265,6 +1606,85 @@ movi-player#video_player {
         </div>
         <div class="episodes-error" id="episodesError" style="display: none;"></div>
         <div class="episodes-list" id="episodesList"></div>
+      </div>
+    </div>
+
+    <!-- Kineflex Error & API Key Modal Dialog -->
+    <div class="kine-modal-backdrop" id="kineModalBackdrop" style="display: none;">
+      <div class="kine-modal-card" id="kineModalCard" role="dialog" aria-modal="true">
+        <div class="kine-modal-header">
+          <div class="kine-modal-icon-wrap" id="kineModalIconWrap">
+            <ion-icon name="key-outline" id="kineModalIcon"></ion-icon>
+          </div>
+          <div class="kine-modal-title-box">
+            <div class="kine-modal-badge" id="kineModalBadge">API KEY REQUIRED</div>
+            <h3 class="kine-modal-title" id="kineModalTitle">Kineflex Access</h3>
+          </div>
+          <button class="kine-modal-close" id="kineModalCloseBtn" type="button" title="Close">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+
+        <div class="kine-modal-body">
+          <p class="kine-modal-desc" id="kineModalDesc">
+            An API key is required to stream this content.
+          </p>
+
+          <!-- Stats (Required vs Remaining points) -->
+          <div class="kine-modal-stats" id="kineModalStats" style="display: none;">
+            <div class="kine-stat-item">
+              <span class="kine-stat-label">Required</span>
+              <span class="kine-stat-val" id="kineStatRequired">5 pts</span>
+            </div>
+            <div class="kine-stat-item">
+              <span class="kine-stat-label">Remaining</span>
+              <span class="kine-stat-val" id="kineStatRemaining">0 pts</span>
+            </div>
+          </div>
+
+          <!-- Free Key & Telegram Info Box -->
+          <div class="kine-info-banner" id="kineInfoBanner">
+            <div class="kine-info-row">
+              <ion-icon name="gift-outline" class="kine-info-ico orange"></ion-icon>
+              <span>Free users receive <strong>100 points</strong> automatically!</span>
+            </div>
+            <div class="kine-info-row">
+              <ion-icon name="globe-outline" class="kine-info-ico blue"></ion-icon>
+              <span>Get your free API key at <a href="https://api.kineflex.site" target="_blank" rel="noopener">api.kineflex.site</a></span>
+            </div>
+            <div class="kine-info-row">
+              <ion-icon name="paper-plane-outline" class="kine-info-ico cyan"></ion-icon>
+              <span>Developer? Contact admin on Telegram: <a href="https://t.me/lakshya9pro" target="_blank" rel="noopener">@lakshya9pro</a></span>
+            </div>
+          </div>
+
+          <!-- Key Input Section -->
+          <div class="kine-input-section" id="kineInputSection">
+            <label for="kineKeyInput" class="kine-input-label">Enter API Key (Plaintext or Base64):</label>
+            <div class="kine-input-row">
+              <input type="text" id="kineKeyInput" class="kine-key-input" placeholder="kine_live_... or base64..." autocomplete="off" spellcheck="false" />
+              <button type="button" id="kineKeyApplyBtn" class="kine-apply-btn">Apply &amp; Play</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="kine-modal-footer">
+          <a href="https://api.kineflex.site" target="_blank" rel="noopener" class="kine-btn kine-btn-primary">
+            <ion-icon name="key-outline"></ion-icon>
+            <span>Get Free Key</span>
+          </a>
+          <a href="https://t.me/lakshya9pro" target="_blank" rel="noopener" class="kine-btn kine-btn-telegram">
+            <ion-icon name="paper-plane-outline"></ion-icon>
+            <span>Contact Admin</span>
+          </a>
+          <button type="button" id="kineRetryBtn" class="kine-btn kine-btn-secondary" style="display: none;">
+            <ion-icon name="refresh-outline"></ion-icon>
+            <span>Retry</span>
+          </button>
+          <button type="button" id="kineDismissBtn" class="kine-btn kine-btn-secondary">
+            <span>Dismiss</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1755,12 +2175,216 @@ let url4K = '';
 currentVol.style.width = volumeVal * 100 + "%";
 
 /* ═══════════════════════════════════════════════════════════
+   KINEFLEX MODAL CONTROLLER & API KEY RESOLUTION
+   ═══════════════════════════════════════════════════════════ */
+function resolveApiKey(rawKey) {
+  if (!rawKey) return '';
+  rawKey = rawKey.trim();
+  if (rawKey.startsWith('kine_')) return rawKey;
+  try {
+    const decoded = atob(rawKey);
+    if (/^[\x20-\x7E]+$/.test(decoded)) {
+      return decoded;
+    }
+  } catch (e) {}
+  return rawKey;
+}
+
+function getActiveApiKey() {
+  const params = new URLSearchParams(window.location.search);
+  const qKey = params.get('key') || params.get('api_key') || params.get('token');
+  if (qKey) {
+    try { localStorage.setItem('kineflex_api_key', qKey); } catch (e) {}
+    return resolveApiKey(qKey);
+  }
+  try {
+    const stored = localStorage.getItem('kineflex_api_key');
+    if (stored) return resolveApiKey(stored);
+  } catch (e) {}
+  return '';
+}
+
+function getRawActiveApiKey() {
+  const params = new URLSearchParams(window.location.search);
+  const qKey = params.get('key') || params.get('api_key') || params.get('token');
+  if (qKey) return qKey.trim();
+  try {
+    const stored = localStorage.getItem('kineflex_api_key');
+    if (stored) return stored.trim();
+  } catch (e) {}
+  return '';
+}
+
+function showKineflexModal(err) {
+  const backdrop = document.getElementById('kineModalBackdrop');
+  if (!backdrop) return;
+
+  const iconWrap = document.getElementById('kineModalIconWrap');
+  const icon = document.getElementById('kineModalIcon');
+  const badge = document.getElementById('kineModalBadge');
+  const title = document.getElementById('kineModalTitle');
+  const desc = document.getElementById('kineModalDesc');
+  const stats = document.getElementById('kineModalStats');
+  const statReq = document.getElementById('kineStatRequired');
+  const statRem = document.getElementById('kineStatRemaining');
+  const banner = document.getElementById('kineInfoBanner');
+  const inputSec = document.getElementById('kineInputSection');
+  const keyInput = document.getElementById('kineKeyInput');
+  const retryBtn = document.getElementById('kineRetryBtn');
+
+  if (loader) loader.style.display = 'none';
+
+  const code = (err && err.code ? err.code : 'UNKNOWN').toUpperCase();
+  const msg = err && err.message ? err.message : 'An unexpected error occurred.';
+
+  iconWrap.className = 'kine-modal-icon-wrap';
+  stats.style.display = 'none';
+  banner.style.display = 'flex';
+  inputSec.style.display = 'flex';
+  retryBtn.style.display = 'none';
+
+  const existingKey = getRawActiveApiKey();
+  if (existingKey && keyInput) {
+    keyInput.value = existingKey;
+  }
+
+  if (code === 'MISSING_API_KEY') {
+    badge.textContent = 'API KEY REQUIRED';
+    badge.style.color = '#ff6a00';
+    icon.setAttribute('name', 'key-outline');
+    title.textContent = 'Kineflex API Key Required';
+    desc.textContent = 'No API key was detected. Please provide your API key in the URL (?key=...) or paste it below to watch.';
+  } else if (code === 'INVALID_API_KEY' || code === 'API_KEY_REVOKED') {
+    iconWrap.classList.add('error');
+    badge.textContent = code === 'API_KEY_REVOKED' ? 'KEY REVOKED (401)' : 'INVALID KEY (401)';
+    badge.style.color = '#eb5e55';
+    icon.setAttribute('name', 'alert-circle-outline');
+    title.textContent = 'Invalid or Revoked API Key';
+    desc.textContent = msg || 'The API key provided does not exist or has been revoked. Get a free key or replace it below.';
+  } else if (code === 'INSUFFICIENT_POINTS') {
+    iconWrap.classList.add('busy');
+    badge.textContent = 'INSUFFICIENT POINTS (402)';
+    badge.style.color = '#f0a500';
+    icon.setAttribute('name', 'wallet-outline');
+    title.textContent = 'Points Balance Depleted';
+    desc.textContent = msg || 'Your account balance is below the request cost. Nothing was charged.';
+    if (err.required !== undefined || err.remaining !== undefined) {
+      stats.style.display = 'flex';
+      statReq.textContent = `${err.required || 5} pts`;
+      statRem.textContent = `${err.remaining || 0} pts`;
+    }
+  } else if (code === 'NOT_FOUND') {
+    iconWrap.classList.add('error');
+    badge.textContent = 'NOT FOUND (404)';
+    badge.style.color = '#eb5e55';
+    icon.setAttribute('name', 'videocam-off-outline');
+    title.textContent = 'Video Not Found';
+    desc.textContent = msg || 'No stream or title exists with this ID. Your points were refunded.';
+    banner.style.display = 'none';
+    inputSec.style.display = 'none';
+  } else if (code === 'UPSTREAM_ERROR') {
+    iconWrap.classList.add('busy');
+    badge.textContent = 'SERVER BUSY (502)';
+    badge.style.color = '#f0a500';
+    icon.setAttribute('name', 'cloud-offline-outline');
+    title.textContent = 'API Server is Busy';
+    desc.textContent = 'The upstream video provider failed or the server is busy. Your points were refunded. Please try again in a few moments.';
+    banner.style.display = 'none';
+    inputSec.style.display = 'none';
+    retryBtn.style.display = 'inline-flex';
+  } else if (code === 'RATE_LIMITED') {
+    iconWrap.classList.add('rate');
+    badge.textContent = 'RATE LIMITED (429)';
+    badge.style.color = '#38a1f3';
+    icon.setAttribute('name', 'timer-outline');
+    title.textContent = 'Too Many Requests';
+    const waitSec = err.retryAfter ? ` Please wait ${err.retryAfter} seconds.` : ' Limit is 60 requests/minute.';
+    desc.textContent = (msg || 'Rate limit reached.') + waitSec + ' Rejected requests never cost points.';
+    banner.style.display = 'none';
+    inputSec.style.display = 'none';
+    retryBtn.style.display = 'inline-flex';
+  } else {
+    badge.textContent = `${code}`;
+    badge.style.color = '#ff6a00';
+    icon.setAttribute('name', 'information-circle-outline');
+    title.textContent = 'Notice';
+    desc.textContent = msg;
+  }
+
+  backdrop.style.display = 'flex';
+  requestAnimationFrame(() => {
+    backdrop.classList.add('show');
+  });
+}
+
+function closeKineflexModal() {
+  const backdrop = document.getElementById('kineModalBackdrop');
+  if (!backdrop) return;
+  backdrop.classList.remove('show');
+  setTimeout(() => {
+    backdrop.style.display = 'none';
+  }, 250);
+}
+
+function applyCustomApiKey(enteredKey) {
+  if (!enteredKey) return;
+  enteredKey = enteredKey.trim();
+  try {
+    localStorage.setItem('kineflex_api_key', enteredKey);
+  } catch (e) {}
+
+  const url = new URL(window.location.href);
+  url.searchParams.set('key', enteredKey);
+  window.location.href = url.toString();
+}
+
+function initKineflexModalEvents() {
+  const backdrop = document.getElementById('kineModalBackdrop');
+  const closeBtn = document.getElementById('kineModalCloseBtn');
+  const dismissBtn = document.getElementById('kineDismissBtn');
+  const applyBtn = document.getElementById('kineKeyApplyBtn');
+  const keyInput = document.getElementById('kineKeyInput');
+  const retryBtn = document.getElementById('kineRetryBtn');
+
+  if (closeBtn) closeBtn.addEventListener('click', closeKineflexModal);
+  if (dismissBtn) dismissBtn.addEventListener('click', closeKineflexModal);
+  if (backdrop) {
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) closeKineflexModal();
+    });
+  }
+  if (retryBtn) {
+    retryBtn.addEventListener('click', () => {
+      window.location.reload();
+    });
+  }
+  if (applyBtn && keyInput) {
+    applyBtn.addEventListener('click', () => {
+      applyCustomApiKey(keyInput.value);
+    });
+    keyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        applyCustomApiKey(keyInput.value);
+      }
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
    SECTION 5 – PLAYER SETUP (JW Player)
    controls:false hides JW's own skin entirely — every button
    on screen is the custom UI, driving playback through JW's
    API (player.play/pause/seek/setVolume/...) and JW's events.
 ═══════════════════════════════════════════════════════════ */
 async function setupPlayer() {
+  initKineflexModalEvents();
+
+  if (window.initialError) {
+    showKineflexModal(window.initialError);
+    if (loader) loader.style.display = 'none';
+    return;
+  }
+
   const urlParams = new URLSearchParams(window.location.search);
   const idParam = urlParams.get('id');
   const urlParam = urlParams.get('url');
@@ -1809,49 +2433,95 @@ async function setupPlayer() {
     }
   } else if (!window.initialMedia && movieMatch) {
     const movieId = movieMatch[1];
-    try {
-      const kineToken = 'kine_live_9AuUd4Y1uqQ-GGACHQGNBIxn2E4oxm7H';
-      let res = await fetch(`https://api.kineflex.site/v1/movie/${movieId}?web`, {
-        headers: { 'Authorization': `Bearer ${kineToken}` }
+    const key = getActiveApiKey();
+    if (!key) {
+      showKineflexModal({
+        code: 'MISSING_API_KEY',
+        message: 'No API key provided. Please provide an API key in the URL (?key=...) or enter it below.',
+        httpStatus: 401,
+        keyProvided: false
       });
+      return;
+    }
+    try {
+      let res = await fetch(`/api/movie/${movieId}?key=${encodeURIComponent(key)}`);
       if (!res.ok) {
-        res = await fetch(`https://api.kineflex.site/v1/tv/movie/${movieId}?web`, {
-          headers: { 'Authorization': `Bearer ${kineToken}` }
+        res = await fetch(`https://api.kineflex.site/v1/movie/${movieId}?web`, {
+          headers: { 'Authorization': `Bearer ${key}` }
         });
-      }
-      if (res.ok) {
-        const json = await res.json();
-        if (json && json.data && json.data.url) {
-          urlPlay = json.data.url;
-          if (json.data.name) title = json.data.name;
-          if (json.data.poster) poster = json.data.poster;
-          videoID = String(json.data.id || movieId);
+        if (!res.ok) {
+          res = await fetch(`https://api.kineflex.site/v1/tv/movie/${movieId}?web`, {
+            headers: { 'Authorization': `Bearer ${key}` }
+          });
         }
       }
+      const json = await res.json().catch(() => null);
+      if (res.ok && json && (json.data?.url || json.url)) {
+        const d = json.data || json;
+        urlPlay = d.url;
+        if (d.name || d.title) title = d.name || d.title;
+        if (d.poster) poster = d.poster;
+        videoID = String(d.id || movieId);
+      } else {
+        showKineflexModal(json?.error || {
+          code: res.status === 404 ? 'NOT_FOUND' : res.status === 502 ? 'UPSTREAM_ERROR' : 'API_ERROR',
+          message: json?.message || 'Failed to fetch video',
+          httpStatus: res.status
+        });
+        return;
+      }
     } catch (err) {
-      console.error("[Kineflex] Movie fetch error:", err);
+      showKineflexModal({
+        code: 'UPSTREAM_ERROR',
+        message: err.message,
+        httpStatus: 502
+      });
+      return;
     }
   } else if (!window.initialMedia && tvMatch) {
     const tvId = tvMatch[1];
     const season = tvMatch[2];
     const episode = tvMatch[3];
-    try {
-      const kineToken = 'kine_live_9AuUd4Y1uqQ-GGACHQGNBIxn2E4oxm7H';
-      const res = await fetch(`https://api.kineflex.site/v1/tv/${tvId}/${season}/${episode}?web`, {
-        headers: { 'Authorization': `Bearer ${kineToken}` }
+    const key = getActiveApiKey();
+    if (!key) {
+      showKineflexModal({
+        code: 'MISSING_API_KEY',
+        message: 'No API key provided. Please provide an API key in the URL (?key=...) or enter it below.',
+        httpStatus: 401,
+        keyProvided: false
       });
-      if (res.ok) {
-        const json = await res.json();
-        if (json && json.data && json.data.url) {
-          urlPlay = json.data.url;
-          const showName = json.data.name || 'Series';
-          title = `${showName} S${season}E${episode}`;
-          if (json.data.poster) poster = json.data.poster;
-          videoID = `${tvId}_s${season}e${episode}`;
-        }
+      return;
+    }
+    try {
+      let res = await fetch(`/api/tv/${tvId}/${season}/${episode}?key=${encodeURIComponent(key)}`);
+      if (!res.ok) {
+        res = await fetch(`https://api.kineflex.site/v1/tv/${tvId}/${season}/${episode}?web`, {
+          headers: { 'Authorization': `Bearer ${key}` }
+        });
+      }
+      const json = await res.json().catch(() => null);
+      if (res.ok && json && (json.data?.url || json.url)) {
+        const d = json.data || json;
+        urlPlay = d.url;
+        const showName = d.name || d.title || 'Series';
+        title = `${showName} S${season}E${episode}`;
+        if (d.poster) poster = d.poster;
+        videoID = `${tvId}_s${season}e${episode}`;
+      } else {
+        showKineflexModal(json?.error || {
+          code: res.status === 404 ? 'NOT_FOUND' : res.status === 502 ? 'UPSTREAM_ERROR' : 'API_ERROR',
+          message: json?.message || 'Failed to fetch TV show',
+          httpStatus: res.status
+        });
+        return;
       }
     } catch (err) {
-      console.error("[Kineflex] TV fetch error:", err);
+      showKineflexModal({
+        code: 'UPSTREAM_ERROR',
+        message: err.message,
+        httpStatus: 502
+      });
+      return;
     }
   }
 
@@ -3164,7 +3834,8 @@ async function switchEpisode(showId, seasonNum, epNum, epName) {
   currentSeason = seasonNum;
   currentEpisode = epNum;
 
-  const newPath = `/tv/${showId}/${seasonNum}/${epNum}`;
+  const currentRawKey = getRawActiveApiKey();
+  const newPath = `/tv/${showId}/${seasonNum}/${epNum}` + (currentRawKey ? `?key=${encodeURIComponent(currentRawKey)}` : '');
   if (window.history && window.history.pushState) {
     window.history.pushState(null, '', newPath);
   }
@@ -3175,11 +3846,22 @@ async function switchEpisode(showId, seasonNum, epNum, epName) {
   if (loader) loader.style.display = "block";
 
   try {
-    const kineToken = 'kine_live_9AuUd4Y1uqQ-GGACHQGNBIxn2E4oxm7H';
-    let res = await fetch(`/api/tv/${showId}/${seasonNum}/${epNum}`);
+    const key = getActiveApiKey();
+    if (!key) {
+      if (loader) loader.style.display = "none";
+      showKineflexModal({
+        code: "MISSING_API_KEY",
+        message: "No API key provided. Please provide an API key in the URL (?key=...) or enter it below.",
+        httpStatus: 401,
+        keyProvided: false
+      });
+      return;
+    }
+
+    let res = await fetch(`/api/tv/${showId}/${seasonNum}/${epNum}?key=${encodeURIComponent(key)}`);
     if (!res.ok) {
       res = await fetch(`https://api.kineflex.site/v1/tv/${showId}/${seasonNum}/${epNum}?web`, {
-        headers: { 'Authorization': `Bearer ${kineToken}` }
+        headers: { 'Authorization': `Bearer ${key}` }
       });
     }
 
@@ -3202,12 +3884,26 @@ async function switchEpisode(showId, seasonNum, epNum, epName) {
         }
         return;
       }
+    } else {
+      const errJson = await res.json().catch(() => null);
+      if (loader) loader.style.display = "none";
+      showKineflexModal(errJson?.error || errJson || {
+        code: res.status === 404 ? "NOT_FOUND" : res.status === 502 ? "UPSTREAM_ERROR" : "API_ERROR",
+        message: "Failed to switch episode",
+        httpStatus: res.status
+      });
+      return;
     }
   } catch (err) {
     console.error("[Episode Switch] Seamless transition error:", err);
+    if (loader) loader.style.display = "none";
+    showKineflexModal({
+      code: "UPSTREAM_ERROR",
+      message: err.message || "Failed to switch episode",
+      httpStatus: 502
+    });
+    return;
   }
-
-  window.location.href = newPath;
 }
 
 playPause.addEventListener("click", () => {

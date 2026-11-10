@@ -1,0 +1,16 @@
+# Kineflex Player Routing Rules for Netlify
+
+# 1. Typo correction: redirect /move/* to /movie/*
+/move/*     /movie/:splat    301!
+
+# 2. Movie routing: rewrite /movie/:id to /player.html (HTTP 200 keeps URL clean in browser)
+/movie/*    /player.html     200
+
+# 3. TV show routing: rewrite /tv/:id/:season/:episode to /player.html
+/tv/*       /player.html     200
+
+# 4. Direct play prefix routing
+/play=*     /player.html     200
+
+# 5. Root & static files:
+# Netlify automatically serves index.html at "/" and static assets from posters/, data/, etc.

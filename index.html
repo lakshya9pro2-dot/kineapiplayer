@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kineflex — Streaming API & Player</title>
+
+  <!-- SEO & Favicon -->
+  <meta name="theme-color" content="#ff6a00">
+  <meta name="robots" content="index, follow">
+  <meta name="description" content="Kineflex Streaming API. Free movie and TV embed links with multi-audio, 1080p, and fast free keys by api.kineflex.site.">
+  <meta property="og:title" content="Kineflex — Streaming API">
+  <meta property="og:description" content="Free embed links for movies and TV. Multi-audio, 1080p, and fast free keys by api.kineflex.site.">
+  <meta property="og:image" content="https://vids.st/storage/thumbs/thumb-90593-1781927771.png">
+  <meta property="og:url" content="https://api.kineflex.site/">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="https://vids.st/storage/thumbs/thumb-90593-1781927771.png" type="image/png">
+
+  <!-- Fonts & Icons (Montserrat exact match to player.html) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #000000;
+      --bg-2: #0e0e12;
+      --card: rgba(18, 18, 22, 0.78);
+      --fg: #ffffff;
+      --fg-2: #a1a1aa;
+      --fg-3: #71717a;
+      --accent: #ff6a00;
+      --accent-2: #ff8533;
+      --accent-hover: #ff7b1a;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-2: rgba(255, 255, 255, 0.16);
+      --r-sm: 6px;
+      --r-md: 8px;
+      --r-lg: 12px;
+      --r-xl: 16px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-2); }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+
+    .bg-gradient {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 65% 45% at 70% 15%, rgba(255, 106, 0, 0.09), transparent),
+        radial-gradient(ellipse 45% 35% at 20% 85%, rgba(229, 95, 0, 0.06), transparent);
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 1rem 0;
+      background: rgba(8, 8, 10, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-inner { display: flex; align-items: center; justify-content: space-between; }
+    
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .logo:hover { opacity: 0.9; }
+    .logo-text {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .logo-text span {
+      background: linear-gradient(135deg, #ff6a00, #ffa366);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .logo-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(255, 106, 0, 0.15);
+      color: #ff6a00;
+      border: 1px solid rgba(255, 106, 0, 0.3);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    nav { display: flex; align-items: center; gap: 1.75rem; }
+    nav a {
+      color: var(--fg-2);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: color .15s;
+    }
+    nav a:hover { color: var(--accent); }
+
+    main { position: relative; z-index: 1; padding-top: 80px; }
+
+    /* Hero */
+    .hero {
+      padding: 6rem 0 5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      min-height: min(720px, 90vh);
+      display: flex;
+      align-items: center;
+    }
+    .hero .container { position: relative; z-index: 2; }
+    .hero::after {
+      content: '';
+      position: absolute; inset: 0; z-index: 1;
+      background:
+        radial-gradient(ellipse 55% 65% at 50% 50%, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.25) 70%, transparent),
+        linear-gradient(180deg, transparent 60%, var(--bg));
+      pointer-events: none;
+    }
+    .hero-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(255, 106, 0, 0.1);
+      border: 1px solid rgba(255, 106, 0, 0.25);
+      font-size: 0.82rem;
+      color: var(--accent-2);
+      font-weight: 700;
+      letter-spacing: .04em;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+    }
+    .hero-title {
+      font-size: clamp(2.25rem, 5vw, 3.75rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+    }
+    .hero-title .gradient {
+      background: linear-gradient(135deg, #ff6a00 0%, #ffaa44 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-sub { color: var(--fg-2); font-size: 1.05rem; max-width: 620px; margin: 0 auto 2rem; line-height: 1.6; }
+    .hero-buttons { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 2.5rem; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .75rem 1.6rem;
+      border: 1px solid rgba(255, 106, 0, 0.4);
+      background: linear-gradient(135deg, #ff6a00, #e55f00);
+      border-radius: var(--r-md);
+      color: #fff; font-size: .9rem; font-weight: 700;
+      text-decoration: none; transition: transform .15s, box-shadow .15s, opacity .15s;
+      box-shadow: 0 4px 18px rgba(255, 106, 0, 0.35);
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(255, 106, 0, 0.5);
+      opacity: 0.95;
+    }
+    .btn.ghost {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--border-2);
+      color: var(--fg-2);
+      box-shadow: none;
+    }
+    .btn.ghost:hover {
+      color: #fff;
+      border-color: rgba(255, 106, 0, 0.5);
+      background: rgba(255, 106, 0, 0.08);
+      transform: translateY(-2px);
+    }
+
+    /* Hero marquee — poster rows drifting behind the hero */
+    .marquee {
+      position: absolute; inset: 0; z-index: 0;
+      display: flex; flex-direction: column; justify-content: center; gap: .75rem;
+      overflow: hidden; pointer-events: none;
+      opacity: .65;
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+              mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+    }
+    .marquee-row { display: flex; width: max-content; gap: .75rem; }
+    .marquee-row.r1 { animation: slide 60s linear infinite; }
+    .marquee-row.r2 { animation: slide 75s linear infinite reverse; }
+    .marquee-row.r3 { animation: slide 90s linear infinite; }
+    @keyframes slide {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    .mposter {
+      flex: 0 0 auto;
+      width: 140px; aspect-ratio: 2/3;
+      border-radius: var(--r-md);
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+    .mposter img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    @media (prefers-reduced-motion: reduce) { .marquee-row { animation: none; } }
+    @media (max-width: 640px) { .mposter { width: 100px; } .marquee { opacity: .5; } }
+
+    /* Shared section */
+    section { padding: 4.5rem 0; }
+    .section-head { text-align: center; margin-bottom: 2.5rem; }
+    .section-head h2 { font-size: 1.85rem; font-weight: 800; margin-bottom: .4rem; letter-spacing: -0.01em; color: #fff; }
+    .section-head p { color: var(--fg-2); font-size: .95rem; }
+
+    /* Demo */
+    .demo-grid { max-width: 860px; margin: 0 auto; }
+    .player-wrap { display: flex; flex-direction: column; gap: .75rem; }
+    .player-controls, .embed-box {
+      padding: .875rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .type-switch { display: flex; gap: .5rem; margin-bottom: .75rem; }
+    .type-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
+      padding: .6rem 1.1rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--fg-2);
+      font: 600 .82rem inherit;
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s, transform .15s;
+    }
+    .type-btn:hover { background: rgba(255, 106, 0, 0.12); color: #fff; border-color: rgba(255, 106, 0, 0.3); }
+    .type-btn.active {
+      background: linear-gradient(135deg, var(--accent), #e55f00);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(255, 106, 0, 0.3);
+    }
+    .type-btn svg { width: 15px; height: 15px; }
+    #inputs { display: flex; gap: .5rem; }
+    #inputs input, .embed-box input {
+      width: 100%;
+      padding: .65rem .9rem;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--fg);
+      font-size: .85rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    #inputs input::placeholder { color: var(--fg-3); }
+    #inputs input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(255, 106, 0, 0.25);
+    }
+    .embed-box input {
+      color: var(--accent-2);
+      font-family: ui-monospace, 'SF Mono', monospace;
+      font-size: .78rem;
+    }
+    .player-frame {
+      aspect-ratio: 16/9;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+    }
+    .player-frame iframe { width: 100%; height: 100%; border: 0; }
+
+    /* Features */
+    .features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+    .feature {
+      padding: 1.6rem 1.4rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      transition: border-color .25s, transform .25s, box-shadow .25s;
+      display: flex;
+      flex-direction: column;
+    }
+    .feature:hover {
+      border-color: rgba(255, 106, 0, 0.45);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(255, 106, 0, 0.15);
+    }
+    .f-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(255, 106, 0, 0.16), rgba(255, 106, 0, 0.04));
+      border: 1px solid rgba(255, 106, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.1rem;
+      color: #ff6a00;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 106, 0, 0.12);
+    }
+    .feature:hover .f-icon {
+      transform: scale(1.08);
+      border-color: #ff6a00;
+      box-shadow: 0 6px 20px rgba(255, 106, 0, 0.3);
+      background: linear-gradient(135deg, rgba(255, 106, 0, 0.28), rgba(255, 106, 0, 0.1));
+    }
+    .f-icon svg { width: 26px; height: 26px; }
+    .feature h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: .45rem; color: #fff; }
+    .feature p { font-size: .85rem; color: var(--fg-2); line-height: 1.55; }
+
+    /* Docs */
+    .docs-note {
+      text-align: center; padding: .875rem 1.25rem; margin-bottom: 1.5rem;
+      background: rgba(255, 106, 0, 0.1);
+      border: 1px solid rgba(255, 106, 0, 0.25);
+      border-radius: var(--r-md);
+      font-size: .85rem; color: var(--accent-2); font-weight: 500;
+    }
+    .docs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+    .doc-card {
+      padding: 1.1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      transition: border-color .2s;
+    }
+    .doc-card:hover { border-color: rgba(255, 106, 0, 0.3); }
+    .doc-card h4 { font-size: .88rem; font-weight: 700; margin-bottom: .65rem; color: #fff; }
+    .doc-url { display: flex; gap: .4rem; }
+    .doc-url input {
+      flex: 1; padding: .5rem .65rem;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--accent-2); font-size: .72rem;
+      font-family: ui-monospace, 'SF Mono', monospace;
+      outline: none;
+    }
+    .copy-btn {
+      padding: .5rem .7rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--fg-3);
+      cursor: pointer;
+      transition: color .15s, background .15s, border-color .15s;
+    }
+    .copy-btn:hover { color: var(--accent); background: rgba(255, 106, 0, 0.1); border-color: rgba(255, 106, 0, 0.3); }
+    .copy-btn svg { width: 14px; height: 14px; display: block; }
+
+    /* Progress / events */
+    .progress-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+    .pcard {
+      padding: 1.35rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+    }
+    .pcard h3 {
+      display: flex; align-items: center; gap: .625rem;
+      font-size: 1rem; font-weight: 700; margin-bottom: .75rem; color: #fff;
+    }
+    .pcard h3::before {
+      content: ''; width: 3px; height: 18px;
+      background: linear-gradient(135deg, var(--accent), #e55f00);
+      border-radius: 2px;
+    }
+    .pcard p { font-size: .85rem; color: var(--fg-2); margin-bottom: .75rem; }
+    .code {
+      padding: .875rem;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      overflow-x: auto;
+    }
+    .code pre { margin: 0; font-family: ui-monospace, 'SF Mono', monospace; font-size: .72rem; line-height: 1.55; color: #ffa366; white-space: pre-wrap; }
+
+    footer { padding: 2.25rem 0; border-top: 1px solid var(--border); text-align: center; }
+    footer span { font-size: .85rem; color: var(--fg-3); }
+    .disclaimer-box {
+      max-width: 760px; margin: 0 auto 1.25rem;
+      padding: 1rem 1.25rem;
+      border: 1px solid rgba(255, 106, 0, 0.25);
+      background: rgba(255, 106, 0, 0.05);
+      border-radius: .5rem;
+      text-align: center;
+    }
+    .disclaimer {
+      margin: 0 0 .5rem;
+      font-size: .8rem; line-height: 1.65; color: var(--fg-2);
+    }
+    .disclaimer:last-child { margin-bottom: 0; }
+    .disclaimer strong { color: var(--accent-2); font-weight: 700; }
+    .disclaimer a { color: var(--accent-2); text-decoration: underline; text-underline-offset: 2px; font-weight: 600; }
+    .disclaimer a:hover { color: #fff; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .container { padding: 0 1rem; }
+      .features-grid, .docs-grid, .progress-grid { grid-template-columns: 1fr; }
+      nav { gap: 1rem; }
+      nav a span { display: none; }
+    }
+
+    /* Hide season/episode for movie */
+    #inputs[type="movie"] input:not(:first-child) { display: none; }
+    @media (max-width: 640px) {
+      #inputs { flex-wrap: wrap; }
+      #inputs input { flex: 1 1 100%; min-width: 0; }
+      #inputs[type="tv"] #season,
+      #inputs[type="tv"] #episode { flex: 1 1 calc(50% - .25rem); }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+
+  <!-- Shared SVG symbols -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-movie" viewBox="0 0 24 24"><path fill="currentColor" d="M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/></symbol>
+    <symbol id="i-tv" viewBox="0 0 24 24"><path fill="currentColor" d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></symbol>
+  </svg>
+
+  <header>
+    <div class="container header-inner">
+      <a href="index.html" class="logo">
+        <span class="logo-text">Kine<span>flex</span></span>
+        <span class="logo-badge">API</span>
+      </a>
+      <nav>
+        <a href="#features"><span>Features</span></a>
+        <a href="#demo"><span>Demo</span></a>
+        <a href="#api"><span>Docs</span></a>
+        <a href="https://api.kineflex.site" target="_blank" rel="noopener"><span>Get Key</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee-row r1"></div>
+        <div class="marquee-row r2"></div>
+        <div class="marquee-row r3"></div>
+      </div>
+      <div class="container">
+        <div class="hero-brand">api.kineflex.site</div>
+        <h1 class="hero-title">Biggest and Fastest<br><span class="gradient">Streaming API</span></h1>
+        <p class="hero-sub">Free embed links for movies and TV. Multi-audio, crystal clear 1080p Full HD, fast free keys by api.kineflex.site.</p>
+        <div class="hero-buttons">
+          <a href="https://api.kineflex.site" target="_blank" rel="noopener" class="btn">Get free key</a>
+          <a href="#demo" class="btn ghost">Try the player</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo -->
+    <section id="demo">
+      <div class="container">
+        <div class="section-head">
+          <h2>Try it live</h2>
+          <p>Drop a TMDB/IMDB ID, watch it play.</p>
+        </div>
+        <div class="demo-grid">
+          <div class="player-wrap">
+            <div class="player-controls">
+              <div class="type-switch">
+                <button class="type-btn active" data-type="movie" data-api="1">
+                  <svg><use href="#i-movie"/></svg>Movie
+                </button>
+                <button class="type-btn" data-type="tv" data-api="1">
+                  <svg><use href="#i-tv"/></svg>TV Series
+                </button>
+              </div>
+              <div id="inputs" type="movie">
+                <input id="tmdb" type="text" placeholder="TMDB ID / IMDB ID">
+                <input id="season" type="number" placeholder="Season">
+                <input id="episode" type="number" placeholder="Episode">
+              </div>
+            </div>
+            <div class="embed-box" style="display:flex; gap:0.5rem; align-items:center;">
+              <input id="embed" type="text" readonly placeholder="Embed URL appears here">
+              <button class="copy-btn" id="copyEmbedBtn" aria-label="Copy embed URL" title="Copy embed URL"><svg><use href="#i-copy"/></svg></button>
+            </div>
+            <div class="player-frame"><iframe scrolling="no" allowfullscreen allow="autoplay; fullscreen; picture-in-picture"></iframe></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features">
+      <div class="container">
+        <div class="section-head">
+          <h2>Why it feels good</h2>
+          <p>Essentials, done right.</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature">
+            <div class="f-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z" fill="rgba(255,106,0,0.2)"/>
+                <path d="M5 19h14"/>
+              </svg>
+            </div>
+            <h3>Free Premium Service</h3>
+            <p>100% free streaming with premium features, zero subscription costs, and no hidden fees.</p>
+          </div>
+          <div class="feature">
+            <div class="f-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+                <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" fill="rgba(255,106,0,0.2)"/>
+                <path d="M9 13v-2m3 3V8m3 5v-3"/>
+              </svg>
+            </div>
+            <h3>Multi-Audio & 1080p</h3>
+            <p>Multi-audio tracks for every movie and show in crystal clear 1080p Full HD playback.</p>
+          </div>
+          <div class="feature">
+            <div class="f-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="7.5" cy="15.5" r="4.5" fill="rgba(255,106,0,0.2)"/>
+                <path d="M11 12l8-8m0 0h4m-4 0v4m-3 1l2 2"/>
+                <circle cx="7.5" cy="15.5" r="1.5" fill="#ff6a00"/>
+              </svg>
+            </div>
+            <h3>Fast Free Key</h3>
+            <p>Instant fast free API keys provided directly by api.kineflex.site.</p>
+          </div>
+          <div class="feature">
+            <div class="f-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="7" rx="2" fill="rgba(255,106,0,0.15)"/>
+                <rect x="2" y="14" width="20" height="7" rx="2" fill="rgba(255,106,0,0.15)"/>
+                <circle cx="6" cy="6.5" r="1" fill="#ff6a00"/>
+                <circle cx="6" cy="17.5" r="1" fill="#ff6a00"/>
+                <path d="M12 7h6M12 18h6"/>
+                <path d="M12 11l-2 3h4l-2 3" stroke="#ffaa44" stroke-width="2.2" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3>Fast Servers</h3>
+            <p>Multiple ultra-fast cloud backends with instant auto-fallback and zero buffering.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- API docs -->
+    <section id="api">
+      <div class="container">
+        <div class="section-head">
+          <h2>Kineflex API Documentation</h2>
+          <p>Real REST API endpoints for Movie & TV playback sources, multi-audio streams & metadata.</p>
+        </div>
+        <div class="docs-note">
+          <strong>Base URL:</strong> <code>https://api.kineflex.site</code> &bull; Authenticate with <code>Authorization: Bearer YOUR_API_KEY</code> &bull; <a href="https://api.kineflex.site/register" target="_blank" rel="noopener">Get 100 free points &rarr;</a>
+        </div>
+        <div class="docs-grid" id="docs-grid"></div>
+
+        <!-- Quickstart Code & Pricing Table -->
+        <div class="progress-grid" style="margin-top: 1.5rem;">
+          <div class="pcard">
+            <h3>Quick Start (cURL)</h3>
+            <p>Make a request using your Bearer API key:</p>
+            <div class="code"><pre>curl https://api.kineflex.site/v1/movie/550 \
+  -H "Authorization: Bearer kine_live_xxxxxxxx"
+
+// Response:
+{
+  "success": true,
+  "data": {
+    "id": 550,
+    "name": "Fight Club",
+    "type": "movie",
+    "url": "https://stream.kineflex.site/movie/550.m3u8",
+    "headers": {
+      "Origin": "https://api.kineflex.site",
+      "Referer": "https://api.kineflex.site/"
+    }
+  },
+  "usage": {
+    "cost": 5,
+    "remaining_points": 95
+  }
+}</pre></div>
+          </div>
+          <div class="pcard">
+            <h3>Points & Cost Schedule</h3>
+            <p>Points are only charged when playback source resolves. Unresolved or failed requests are 100% refunded automatically.</p>
+            <div class="code"><pre>Request Type                                Cost
+─────────────────────────────────────────────────
+Standard Movie & TV Playback                5 points
+Premium Movie & TV Playback                 10 points
+Premium Discovery (/v1/premium)             Free (0 pts)
+Watch History Sync (/v1/watch)              Free (0 pts)
+Account Balance (/v1/account)               Free (0 pts)
+Invalid or Not Found ID                     Free (Refunded)
+─────────────────────────────────────────────────
+• Start with 100 Free Points at api.kineflex.site/register</pre></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="disclaimer-box">
+        <p class="disclaimer">
+          <strong>Disclaimer:</strong> This product uses the <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a> API but is <strong>not endorsed or certified by TMDB</strong>.
+        </p>
+        <p class="disclaimer">
+          Kineflex does <strong>not host, upload, or store any video content</strong> on its servers — we only aggregate publicly available third-party embed links. All media rights belong to their respective owners.
+        </p>
+      </div>
+      <span>&copy; <span id="year"></span> Kineflex — <a href="https://api.kineflex.site" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">api.kineflex.site</a>. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script>
+    const $ = s => document.querySelector(s);
+
+    // Real Kineflex API endpoints from api.kineflex.site
+    const REAL_ENDPOINTS = [
+      {
+        method: 'GET',
+        cost: '5 or 10 pts',
+        scope: 'movie:read',
+        title: 'Movie Playback Source (.m3u8)',
+        desc: 'Resolves movie stream URL, audio tracks, subtitles and streaming headers.',
+        path: '/v1/movie/{id}'
+      },
+      {
+        method: 'GET',
+        cost: 'CORS Friendly',
+        scope: 'movie:read',
+        title: 'Movie Web Player Stream (?web)',
+        desc: 'Routes stream for direct playback in HTML5 video, Hls.js, or Video.js.',
+        path: '/v1/movie/{id}?web'
+      },
+      {
+        method: 'GET',
+        cost: '5 or 10 pts',
+        scope: 'tv:read',
+        title: 'TV Episode Playback Source',
+        desc: 'Returns streaming sources and multi-audio for TV series episodes.',
+        path: '/v1/tv/{id}/{season}/{episode}'
+      },
+      {
+        method: 'GET',
+        cost: 'CORS Friendly',
+        scope: 'tv:read',
+        title: 'TV Episode Web Player Stream (?web)',
+        desc: 'Direct in-browser streaming for TV episodes past browser CORS restrictions.',
+        path: '/v1/tv/{id}/{season}/{episode}?web'
+      },
+      {
+        method: 'POST',
+        cost: 'Free (0 pts)',
+        scope: 'watch:write',
+        title: 'Watch Progress & Resume Sync',
+        desc: 'Synchronize playback position, resume timestamps, and continue watching.',
+        path: '/v1/watch'
+      },
+      {
+        method: 'POST',
+        cost: 'Free (0 pts)',
+        scope: 'watch:write',
+        title: 'Search History Tracking',
+        desc: 'Log user search queries and retrieve personalized recommendation data.',
+        path: '/v1/search/history'
+      },
+      {
+        method: 'GET',
+        cost: 'Free (0 pts)',
+        scope: 'premium:read',
+        title: 'Premium Titles Discovery',
+        desc: 'Discover all currently indexed premium titles and 4K exclusive releases.',
+        path: '/v1/premium'
+      },
+      {
+        method: 'GET',
+        cost: 'Free (0 pts)',
+        scope: 'any key',
+        title: 'Account Balance & Key Info',
+        desc: 'Inspect remaining points balance, key name, prefix, and active permissions.',
+        path: '/v1/account'
+      },
+      {
+        method: 'GET',
+        cost: 'Free (0 pts)',
+        scope: 'no auth',
+        title: 'API Server Health Status',
+        desc: 'Real-time JSON health check for upstream provider connectivity and uptime.',
+        path: '/health'
+      }
+    ];
+
+    const realDocCard = (item) => `
+      <div class="doc-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+          <h4 style="margin:0; font-size:0.92rem; font-weight:700; color:#fff;">${item.title}</h4>
+          <div style="display:flex; gap:0.4rem;">
+            <span style="background:rgba(255,106,0,0.15); color:var(--accent); font-size:0.65rem; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${item.method}</span>
+            <span style="background:rgba(255,255,255,0.08); color:var(--fg-2); font-size:0.65rem; font-weight:600; padding:2px 6px; border-radius:4px;">${item.cost}</span>
+          </div>
+        </div>
+        <p style="font-size:0.78rem; color:var(--fg-3); margin-bottom:0.65rem; line-height:1.4;">${item.desc}</p>
+        <div class="doc-url">
+          <input type="text" readonly value="https://api.kineflex.site${item.path}">
+          <button class="copy-btn" aria-label="Copy" title="Copy endpoint"><svg><use href="#i-copy"/></svg></button>
+        </div>
+      </div>`;
+
+    $('#docs-grid').innerHTML = REAL_ENDPOINTS.map(realDocCard).join('');
+
+    // Player wiring & Kineflex key resolution
+    const inputs = $('#inputs');
+    const tmdb = $('#tmdb');
+    const season = $('#season');
+    const episode = $('#episode');
+    const embed = $('#embed');
+    const iframe = $('iframe');
+    const KINEFLEX_KEY = 'a2luZV9saXZlXzlBdVVkNFkxdXFRLUdHQUNIUUdOQkl4bjJFNG94bTdI';
+
+    document.querySelectorAll('.type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const type = btn.dataset.type;
+        inputs.setAttribute('type', type);
+        if (type === 'movie') {
+          tmdb.value = 550;
+        } else {
+          tmdb.value = 259909;
+          season.value = 2;
+          episode.value = 2;
+        }
+        updateEmbed();
+      });
+    });
+
+    [tmdb, season, episode].forEach(el => {
+      el.addEventListener('input', updateEmbed);
+    });
+
+    function updateEmbed() {
+      const btn = document.querySelector('.type-btn.active');
+      if (!btn) return;
+      const type = btn.dataset.type || 'movie';
+      const id = tmdb.value.trim() || (type === 'movie' ? '550' : '259909');
+      const s = season.value || '2';
+      const ep = episode.value || '2';
+
+      // 1. Show clean URL in HTML (without key):
+      const displayUrl = type === 'movie'
+        ? `https://player.kineflex.site/movie/${id}`
+        : `https://player.kineflex.site/tv/${id}/${s}/${ep}`;
+      embed.value = displayUrl;
+
+      // 2. In actual GET request, send with the secret API key:
+      const requestUrl = type === 'movie'
+        ? `https://player.kineflex.site/movie/${id}?key=${KINEFLEX_KEY}`
+        : `https://player.kineflex.site/tv/${id}/${s}/${ep}?key=${KINEFLEX_KEY}`;
+      iframe.src = requestUrl;
+    }
+
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.copy-btn');
+      if (!btn) return;
+      const input = btn.previousElementSibling;
+      navigator.clipboard.writeText(input.value);
+      btn.style.color = '#ff6a00';
+      setTimeout(() => (btn.style.color = ''), 1000);
+    });
+
+    document.querySelector('.type-btn')?.click();
+    $('#year').textContent = new Date().getFullYear();
+
+    // 120 Local optimized posters organized by rows:
+    const row1Posters = Array.from({ length: 40 }, (_, i) => `posters/${i + 1}.jpg`);
+    const row2Posters = Array.from({ length: 40 }, (_, i) => `posters/${i + 41}.jpg`);
+    const row3Posters = Array.from({ length: 40 }, (_, i) => `posters/${i + 81}.jpg`);
+
+    function getImgSrc(item) {
+      const p = typeof item === 'string' ? item : (item.file || item.poster_path || '');
+      if (p.startsWith('posters/') || p.startsWith('http')) return p;
+      return `https://image.tmdb.org/t/p/w185${p}`;
+    }
+
+    function renderMarquee(list1, list2, list3) {
+      const rows = ['.marquee-row.r1', '.marquee-row.r2', '.marquee-row.r3'].map(s => $(s));
+      const sources = [list1, list2, list3];
+      sources.forEach((list, i) => {
+        if (!rows[i] || !list || !list.length) return;
+        const validPosters = list.map(getImgSrc).filter(Boolean);
+        if (!validPosters.length) return;
+        // Duplicate row so the -50% CSS infinite slide seams smoothly
+        const html = [...validPosters, ...validPosters]
+          .map(src => `<div class="mposter"><img loading="lazy" src="${src}" alt="Movie poster"></div>`)
+          .join('');
+        rows[i].innerHTML = html;
+      });
+    }
+
+    // Render 120 local optimized posters immediately
+    renderMarquee(row1Posters, row2Posters, row3Posters);
+
+    // Optionally load from data/1.json, 2.json, 3.json if hosted
+    (async () => {
+      try {
+        const [d1, d2, d3] = await Promise.all([
+          fetch('data/1.json').then(r => r.json()).catch(() => null),
+          fetch('data/2.json').then(r => r.json()).catch(() => null),
+          fetch('data/3.json').then(r => r.json()).catch(() => null),
+        ]);
+        if (d1?.images && d2?.images && d3?.images) {
+          renderMarquee(d1.images, d2.images, d3.images);
+        }
+      } catch (_) {}
+    })();
+  </script>
+</body>
+</html>

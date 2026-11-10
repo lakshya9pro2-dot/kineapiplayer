@@ -1,0 +1,13 @@
+name = "kineflex-player"
+main = "worker.js"
+compatibility_date = "2024-04-01"
+
+# Static assets configuration for Cloudflare Workers
+[assets]
+directory = "."
+binding = "ASSETS"
+
+# Optional environment variables
+# [vars]
+# KINEFLEX_TOKEN = "your_kineflex_api_key_here"
+# ORIGIN_URL = "https://your-netlify-site.netlify.app"

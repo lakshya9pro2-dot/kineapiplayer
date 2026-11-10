@@ -1,0 +1,35 @@
+[build]
+  publish = "."
+
+# 1. Typo correction: redirect /move/* to /movie/*
+[[redirects]]
+  from = "/move/*"
+  to = "/movie/:splat"
+  status = 301
+  force = true
+
+# 2. Movie routing: rewrite /movie/:id to /player.html (HTTP 200 preserves pathname in browser)
+[[redirects]]
+  from = "/movie/*"
+  to = "/player.html"
+  status = 200
+
+# 3. TV show routing: rewrite /tv/:id/:season/:episode to /player.html
+[[redirects]]
+  from = "/tv/*"
+  to = "/player.html"
+  status = 200
+
+# 4. Direct play prefix routing
+[[redirects]]
+  from = "/play=*"
+  to = "/player.html"
+  status = 200
+
+# 5. Global CORS & Security Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS, HEAD"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, X-API-Key, Range"
