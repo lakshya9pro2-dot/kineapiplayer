@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -80,7 +83,135 @@ var (
 	apiTV      = regexp.MustCompile(`^/api/tv/([^/?#]+)/([^/?#]+)/([^/?#]+)`)
 )
 
+// APIGatewayEvent matches Netlify / AWS Lambda API Gateway proxy request
+type APIGatewayEvent struct {
+	Path                  string              `json:"path"`
+	HTTPMethod            string              `json:"httpMethod"`
+	Headers               map[string]string   `json:"headers"`
+	MultiValueHeaders     map[string][]string `json:"multiValueHeaders,omitempty"`
+	QueryStringParameters map[string]string   `json:"queryStringParameters,omitempty"`
+	Body                  string              `json:"body,omitempty"`
+	IsBase64Encoded       bool                `json:"isBase64Encoded,omitempty"`
+}
+
+// APIGatewayResponse matches Netlify / AWS Lambda API Gateway proxy response
+type APIGatewayResponse struct {
+	StatusCode        int                 `json:"statusCode"`
+	Headers           map[string]string   `json:"headers,omitempty"`
+	MultiValueHeaders map[string][]string `json:"multiValueHeaders,omitempty"`
+	Body              string              `json:"body"`
+	IsBase64Encoded   bool                `json:"isBase64Encoded"`
+}
+
+func runLambdaRuntime(handler http.Handler) {
+	runtimeAPI := os.Getenv("AWS_LAMBDA_RUNTIME_API")
+	if runtimeAPI == "" {
+		return
+	}
+
+	client := &http.Client{Timeout: 0}
+	baseURL := fmt.Sprintf("http://%s/2018-06-01/runtime/invocation", runtimeAPI)
+
+	log.Printf("[*] Netlify Go Serverless Lambda runtime started (API: %s)", runtimeAPI)
+
+	for {
+		resp, err := client.Get(fmt.Sprintf("%s/next", baseURL))
+		if err != nil {
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
+
+		reqID := resp.Header.Get("Lambda-Runtime-Aws-Request-Id")
+		bodyBytes, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		if err != nil {
+			continue
+		}
+
+		var event APIGatewayEvent
+		if err := json.Unmarshal(bodyBytes, &event); err != nil {
+			continue
+		}
+
+		var reqBody io.Reader
+		if event.Body != "" {
+			if event.IsBase64Encoded {
+				decoded, bErr := base64.StdEncoding.DecodeString(event.Body)
+				if bErr == nil {
+					reqBody = bytes.NewReader(decoded)
+				}
+			} else {
+				reqBody = strings.NewReader(event.Body)
+			}
+		}
+
+		pathAndQuery := event.Path
+		if len(event.QueryStringParameters) > 0 {
+			q := url.Values{}
+			for k, v := range event.QueryStringParameters {
+				q.Set(k, v)
+			}
+			pathAndQuery += "?" + q.Encode()
+		}
+
+		httpReq, err := http.NewRequestWithContext(context.Background(), event.HTTPMethod, pathAndQuery, reqBody)
+		if err != nil {
+			errPayload, _ := json.Marshal(map[string]string{"errorMessage": err.Error()})
+			respErr, _ := client.Post(fmt.Sprintf("%s/%s/error", baseURL, reqID), "application/json", bytes.NewReader(errPayload))
+			if respErr != nil {
+				respErr.Body.Close()
+			}
+			continue
+		}
+
+		for k, v := range event.Headers {
+			httpReq.Header.Set(k, v)
+			if strings.EqualFold(k, "host") && httpReq.Host == "" {
+				httpReq.Host = v
+			}
+		}
+		for k, values := range event.MultiValueHeaders {
+			for _, v := range values {
+				httpReq.Header.Add(k, v)
+			}
+		}
+
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httpReq)
+
+		lambdaResp := APIGatewayResponse{
+			StatusCode: rec.Code,
+			Headers:    make(map[string]string),
+		}
+
+		for k, values := range rec.Header() {
+			if len(values) > 0 {
+				lambdaResp.Headers[k] = values[0]
+			}
+		}
+
+		resBodyBytes := rec.Body.Bytes()
+		lambdaResp.Body = base64.StdEncoding.EncodeToString(resBodyBytes)
+		lambdaResp.IsBase64Encoded = true
+
+		respJSON, _ := json.Marshal(lambdaResp)
+		postResp, pErr := client.Post(fmt.Sprintf("%s/%s/response", baseURL, reqID), "application/json", bytes.NewReader(respJSON))
+		if pErr == nil {
+			postResp.Body.Close()
+		}
+	}
+}
+
 func main() {
+	handler := corsMiddleware(http.HandlerFunc(handleRequest))
+
+	// Check if running in Netlify / AWS Lambda serverless function environment
+	if os.Getenv("AWS_LAMBDA_RUNTIME_API") != "" {
+		runLambdaRuntime(handler)
+		return
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
@@ -88,7 +219,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:         ":" + port,
-		Handler:      corsMiddleware(http.HandlerFunc(handleRequest)),
+		Handler:      handler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

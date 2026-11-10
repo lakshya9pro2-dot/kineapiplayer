@@ -1,32 +1,52 @@
 [build]
   publish = "."
+  functions = "netlify/functions"
 
-# 1. Typo correction: redirect /move/* to /movie/*
+# 1. Typo correction
 [[redirects]]
   from = "/move/*"
   to = "/movie/:splat"
   status = 301
   force = true
 
-# 2. Movie routing: rewrite /movie/:id to /player.html (HTTP 200 preserves pathname in browser)
+# 2. Serverless API routes -> handled by Netlify Function
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/v1/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/health"
+  to = "/.netlify/functions/api/health"
+  status = 200
+
+[[redirects]]
+  from = "/version"
+  to = "/.netlify/functions/api/version"
+  status = 200
+
+# 3. HTML Video Player Rewrites
 [[redirects]]
   from = "/movie/*"
   to = "/player.html"
   status = 200
 
-# 3. TV show routing: rewrite /tv/:id/:season/:episode to /player.html
 [[redirects]]
   from = "/tv/*"
   to = "/player.html"
   status = 200
 
-# 4. Direct play prefix routing
 [[redirects]]
   from = "/play=*"
   to = "/player.html"
   status = 200
 
-# 5. Global CORS & Security Headers
+# 4. Global CORS Headers
 [[headers]]
   for = "/*"
   [headers.values]

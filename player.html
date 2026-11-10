@@ -2445,16 +2445,6 @@ async function setupPlayer() {
     }
     try {
       let res = await fetch(`/api/movie/${movieId}?key=${encodeURIComponent(key)}`);
-      if (!res.ok) {
-        res = await fetch(`https://api.kineflex.site/v1/movie/${movieId}?web`, {
-          headers: { 'Authorization': `Bearer ${key}` }
-        });
-        if (!res.ok) {
-          res = await fetch(`https://api.kineflex.site/v1/tv/movie/${movieId}?web`, {
-            headers: { 'Authorization': `Bearer ${key}` }
-          });
-        }
-      }
       const json = await res.json().catch(() => null);
       if (res.ok && json && (json.data?.url || json.url)) {
         const d = json.data || json;
@@ -2494,11 +2484,6 @@ async function setupPlayer() {
     }
     try {
       let res = await fetch(`/api/tv/${tvId}/${season}/${episode}?key=${encodeURIComponent(key)}`);
-      if (!res.ok) {
-        res = await fetch(`https://api.kineflex.site/v1/tv/${tvId}/${season}/${episode}?web`, {
-          headers: { 'Authorization': `Bearer ${key}` }
-        });
-      }
       const json = await res.json().catch(() => null);
       if (res.ok && json && (json.data?.url || json.url)) {
         const d = json.data || json;
@@ -3859,11 +3844,6 @@ async function switchEpisode(showId, seasonNum, epNum, epName) {
     }
 
     let res = await fetch(`/api/tv/${showId}/${seasonNum}/${epNum}?key=${encodeURIComponent(key)}`);
-    if (!res.ok) {
-      res = await fetch(`https://api.kineflex.site/v1/tv/${showId}/${seasonNum}/${epNum}?web`, {
-        headers: { 'Authorization': `Bearer ${key}` }
-      });
-    }
 
     if (res.ok) {
       const data = await res.json();
